@@ -13,10 +13,10 @@ const WORLDS = [
         description: "En Python, `print()` muestra texto en pantalla. Los textos van entre comillas.",
         story: "🤖 PyBot dice: ¡Hola! Para hablar con el mundo, necesitas usar `print()`. ¡Inténtalo!",
         instructions: "Escribe código que imprima exactamente: `Hola, Python!`",
-        starter: '# Escribe tu código aquí\n',
+        starter: '# Escribe tu código aquí:\n\n',
         solution: 'print("Hola, Python!")',
         tests: [
-          { input: null, expected: "Hola, Python!", exact: true }
+          { type: "output_contains", text: "Hola, Python!" }
         ],
         hints: [
           "Usa la función print() para mostrar texto",
@@ -31,7 +31,7 @@ const WORLDS = [
         description: "Una variable es como una caja con nombre que guarda un valor. `nombre = \"Ana\"` crea una variable llamada nombre.",
         story: "🤖 PyBot dice: ¡Yo también tengo un nombre! Se llama PyBot. ¿Cómo te llamas tú? Guárdalo en una variable.",
         instructions: "Crea una variable `nombre` con tu nombre y otra `edad` con tu edad. Luego imprime ambas.",
-        starter: '# Crea las variables aquí\nnombre = \nedad = \n\n# Imprime las variables\n',
+        starter: '# Crea las variables (reemplaza los ?)\nnombre = ?\nedad = ?\n\n# Imprime las variables\nprint(nombre)\nprint(edad)\n',
         solution: 'nombre = "Juan"\nedad = 25\nprint(nombre)\nprint(edad)',
         tests: [
           { type: "has_variable", name: "nombre" },

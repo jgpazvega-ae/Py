@@ -125,23 +125,33 @@ async function runTests(exercise, code, stdout) {
     switch (test.type) {
       case 'output_contains':
         pass = stdout.includes(test.text);
-        detail = pass ? `Salida contiene "${test.text}"` : `Esperaba encontrar "${test.text}"`;
+        if (pass) {
+          detail = `✓ Salida contiene "${test.text}"`;
+        } else {
+          const actual = stdout.trim() || '(sin salida)';
+          const truncated = actual.length > 60 ? actual.slice(0, 60) + '…' : actual;
+          detail = `Esperaba: "${test.text}"\nObtuviste: "${truncated}"`;
+        }
         break;
 
       case 'not_output_contains':
         pass = !stdout.includes(test.text);
-        detail = pass ? `Salida no contiene "${test.text}" ✓` : `No debería aparecer "${test.text}"`;
+        detail = pass ? `✓ No contiene "${test.text}"` : `No debería aparecer "${test.text}"`;
         break;
 
       case 'exact':
         pass = stdout.trim() === test.expected;
-        detail = pass ? 'Salida exacta correcta' : `Esperaba: "${test.expected}", obtuve: "${stdout.trim()}"`;
+        detail = pass
+          ? `✓ Salida correcta`
+          : `Esperaba: "${test.expected}"\nObtuviste: "${stdout.trim() || '(sin salida)'}"`;
         break;
 
       case 'output_lines': {
         const lines = stdout.trim().split('\n').filter(l => l.length > 0);
         pass = lines.length === test.count;
-        detail = `${lines.length} líneas de salida (esperaba ${test.count})`;
+        detail = pass
+          ? `✓ ${lines.length} líneas de salida`
+          : `Esperaba ${test.count} líneas, obtuviste ${lines.length}`;
         break;
       }
 
@@ -206,8 +216,8 @@ async function runTests(exercise, code, stdout) {
       }
 
       case 'runs_without_error':
-        pass = true; // If we got here, no fatal error
-        detail = 'Código ejecutado sin errores ✓';
+        pass = true;
+        detail = '✓ Código ejecutado sin errores';
         break;
 
       case 'output_has_variable_value':
@@ -668,11 +678,12 @@ function displayTestResults(results) {
   results.forEach((r, i) => {
     const item = document.createElement('div');
     item.className = `test-item ${r.pass ? 'pass' : 'fail'}`;
+    const detailLines = r.detail.split('\n').map(l => `<div>${l}</div>`).join('');
     item.innerHTML = `
       <span class="test-icon">${r.pass ? '✅' : '❌'}</span>
       <div class="test-info">
         <div class="test-desc">Prueba ${i + 1}</div>
-        <div class="test-detail">${r.detail}</div>
+        <div class="test-detail">${detailLines}</div>
       </div>
     `;
     list.appendChild(item);
@@ -832,7 +843,7 @@ function initEditor() {
     indentUnit: 4,
     tabSize: 4,
     indentWithTabs: false,
-    lineWrapping: false,
+    lineWrapping: true,
     extraKeys: {
       'Ctrl-Enter': executeCode,
       'Cmd-Enter': executeCode,
