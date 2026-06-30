@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PyQuest — Aprende Python</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>" />
+  <!-- CodeMirror -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/monokai.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+  <!-- Pyodide -->
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Loading screen -->
+  <div id="loading-screen">
+    <div class="loading-content">
+      <div class="loading-snake">🐍</div>
+      <h1>PyQuest</h1>
+      <p>Cargando Python en tu navegador...</p>
+      <div class="loading-bar-wrap"><div class="loading-bar" id="loading-bar"></div></div>
+      <p class="loading-status" id="loading-status">Iniciando Pyodide...</p>
+    </div>
+  </div>
+
+  <!-- Achievement Toast -->
+  <div id="achievement-toast" class="achievement-toast hidden">
+    <div class="achievement-icon-big" id="toast-icon">🏆</div>
+    <div class="achievement-info">
+      <div class="achievement-label">¡Logro Desbloqueado!</div>
+      <div class="achievement-name" id="toast-name"></div>
+    </div>
+  </div>
+
+  <!-- XP Popup -->
+  <div id="xp-popup" class="xp-popup hidden">+<span id="xp-amount">0</span> XP</div>
+
+  <!-- Main Layout -->
+  <div id="app" class="app hidden">
+    <!-- Activity Bar -->
+    <div class="activity-bar">
+      <div class="activity-logo" title="PyQuest">🐍</div>
+      <div class="activity-sep"></div>
+      <button class="activity-btn active" data-panel="explorer" title="Explorador de ejercicios">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"/><path d="M3 9h18M9 3v18"/></svg>
+      </button>
+      <button class="activity-btn" data-panel="achievements" title="Logros">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+      </button>
+      <button class="activity-btn" data-panel="reference" title="Referencia Python">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      </button>
+      <div class="activity-spacer"></div>
+      <button class="activity-btn" data-panel="settings" title="Configuración">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <!-- Explorer Panel -->
+      <div class="panel active" id="panel-explorer">
+        <div class="panel-header">
+          <span>EXPLORADOR</span>
+        </div>
+        <div class="explorer-content" id="explorer-content"></div>
+      </div>
+
+      <!-- Achievements Panel -->
+      <div class="panel" id="panel-achievements">
+        <div class="panel-header"><span>LOGROS</span></div>
+        <div class="achievements-content" id="achievements-content"></div>
+      </div>
+
+      <!-- Reference Panel -->
+      <div class="panel" id="panel-reference">
+        <div class="panel-header"><span>REFERENCIA PYTHON</span></div>
+        <div class="reference-content" id="reference-content"></div>
+      </div>
+
+      <!-- Settings Panel -->
+      <div class="panel" id="panel-settings">
+        <div class="panel-header"><span>CONFIGURACIÓN</span></div>
+        <div class="settings-content">
+          <div class="settings-item">
+            <label>Tema del editor</label>
+            <select id="theme-select">
+              <option value="dracula">Dracula (por defecto)</option>
+              <option value="monokai">Monokai</option>
+              <option value="default">Claro</option>
+            </select>
+          </div>
+          <div class="settings-item">
+            <label>Tamaño de fuente</label>
+            <select id="font-select">
+              <option value="13">13px</option>
+              <option value="14" selected>14px</option>
+              <option value="16">16px</option>
+              <option value="18">18px</option>
+            </select>
+          </div>
+          <div class="settings-item">
+            <button class="btn-danger" id="reset-btn">Reiniciar Progreso</button>
+          </div>
+          <div class="settings-info">
+            <h4>Atajos de teclado</h4>
+            <div class="shortcut"><kbd>Ctrl+Enter</kbd> Ejecutar código</div>
+            <div class="shortcut"><kbd>Ctrl+/</kbd> Comentar línea</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resize Handle -->
+    <div class="resize-handle" id="resize-handle"></div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Welcome Screen -->
+      <div id="welcome-screen">
+        <div class="welcome-inner">
+          <div class="welcome-logo">🐍</div>
+          <h1>Bienvenido a <span class="brand">PyQuest</span></h1>
+          <p class="welcome-sub">Aprende Python jugando. Selecciona un ejercicio del panel izquierdo para comenzar.</p>
+          <div class="welcome-stats" id="welcome-stats"></div>
+          <div class="world-cards" id="world-cards"></div>
+        </div>
+      </div>
+
+      <!-- Exercise Screen -->
+      <div id="exercise-screen" class="hidden">
+        <!-- Tab Bar -->
+        <div class="tab-bar">
+          <div class="tab active" id="current-tab">
+            <span class="tab-icon">🐍</span>
+            <span class="tab-name" id="tab-filename">ejercicio.py</span>
+          </div>
+          <div class="tab-actions">
+            <span class="exercise-progress" id="ex-progress"></span>
+          </div>
+        </div>
+
+        <!-- Exercise Header -->
+        <div class="exercise-header">
+          <div class="exercise-meta">
+            <span class="exercise-world-badge" id="ex-world-badge"></span>
+            <h2 class="exercise-title" id="ex-title"></h2>
+            <span class="exercise-xp" id="ex-xp"></span>
+          </div>
+          <div class="exercise-nav">
+            <button class="btn-icon" id="prev-btn" title="Ejercicio anterior">‹</button>
+            <button class="btn-icon" id="next-btn" title="Ejercicio siguiente">›</button>
+          </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area">
+          <!-- Left: Description + Editor -->
+          <div class="editor-section">
+            <!-- Story Box -->
+            <div class="story-box" id="ex-story"></div>
+
+            <!-- Description -->
+            <div class="description-box">
+              <div class="description-toggle" id="desc-toggle">
+                <span>📖 Concepto del ejercicio</span>
+                <span class="toggle-arrow">▼</span>
+              </div>
+              <div class="description-content" id="ex-description"></div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="instructions-box">
+              <div class="instructions-label">🎯 Tu tarea:</div>
+              <div class="instructions-text" id="ex-instructions"></div>
+            </div>
+
+            <!-- Editor -->
+            <div class="editor-wrap">
+              <div class="editor-toolbar">
+                <span class="editor-label">
+                  <span class="python-badge">Python 3</span>
+                  <span id="editor-filename">ejercicio.py</span>
+                </span>
+                <div class="editor-actions">
+                  <button class="btn-hint" id="hint-btn">💡 Pista (<span id="hints-left">3</span>)</button>
+                  <button class="btn-reset-code" id="reset-code-btn" title="Reiniciar código">↺</button>
+                  <button class="btn-run" id="run-btn">▶ Ejecutar <kbd>Ctrl+↵</kbd></button>
+                </div>
+              </div>
+              <div id="editor-container"></div>
+            </div>
+          </div>
+
+          <!-- Right: Output + Tests -->
+          <div class="output-section">
+            <div class="output-tabs">
+              <button class="output-tab active" data-output="terminal">Terminal</button>
+              <button class="output-tab" data-output="tests">Pruebas</button>
+            </div>
+
+            <!-- Terminal Output -->
+            <div class="output-panel active" id="output-terminal">
+              <div class="terminal-header">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+                <span class="terminal-title">Python 3.11 (Pyodide)</span>
+                <button class="clear-btn" id="clear-btn">limpiar</button>
+              </div>
+              <div class="terminal-body" id="terminal-output">
+                <div class="terminal-welcome">$ python ejercicio.py</div>
+                <div class="terminal-hint-text">Presiona ▶ Ejecutar o Ctrl+Enter para correr tu código</div>
+              </div>
+            </div>
+
+            <!-- Test Results -->
+            <div class="output-panel" id="output-tests">
+              <div class="tests-body" id="tests-output">
+                <div class="tests-empty">Ejecuta tu código para ver los resultados de las pruebas</div>
+              </div>
+            </div>
+
+            <!-- Hints Panel -->
+            <div class="hints-panel hidden" id="hints-panel">
+              <div class="hints-header">
+                <span>💡 Pistas</span>
+                <button id="close-hints">✕</button>
+              </div>
+              <div class="hints-list" id="hints-list"></div>
+            </div>
+
+            <!-- Success Overlay -->
+            <div class="success-overlay hidden" id="success-overlay">
+              <div class="success-content">
+                <div class="success-emoji" id="success-emoji">🎉</div>
+                <h3 id="success-title">¡Excelente!</h3>
+                <p id="success-msg"></p>
+                <div class="success-stars" id="success-stars"></div>
+                <div class="success-xp" id="success-xp"></div>
+                <div class="success-actions">
+                  <button class="btn-primary" id="next-exercise-btn">Siguiente ejercicio →</button>
+                  <button class="btn-secondary" id="review-btn">Revisar solución</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Bar -->
+  <div class="status-bar" id="status-bar">
+    <div class="status-left">
+      <span class="status-python">🐍 Python 3.11</span>
+      <span class="status-sep">|</span>
+      <span id="status-pyodide">Cargando...</span>
+    </div>
+    <div class="status-right">
+      <span class="status-xp" id="status-xp">⚡ 0 XP</span>
+      <span class="status-sep">|</span>
+      <span class="status-level" id="status-level">Nivel 1</span>
+      <span class="status-sep">|</span>
+      <span id="status-progress">0/25 ejercicios</span>
+    </div>
+  </div>
+
+  <script src="exercises.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
