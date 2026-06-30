@@ -523,6 +523,13 @@ function loadExercise(exercise) {
   if (state.editor) {
     state.editor.setValue(savedCode);
     state.editor.clearHistory();
+    setTimeout(() => state.editor.refresh(), 50);
+  }
+
+  // On mobile: close sidebar, show editor tab
+  if (isMobile()) {
+    closeSidebar();
+    switchMobileContentTab('editor');
   }
 
   // Rebuild explorer to update active state
@@ -622,12 +629,14 @@ async function executeCode() {
     terminalEl.appendChild(div);
   }
 
-  // Switch to terminal tab
+  // Switch to terminal tab and output section (mobile)
   switchOutputTab('terminal');
+  if (isMobile()) switchMobileContentTab('output');
 
-  // Run tests
+  // Run tests (small delay so terminal renders first)
   const testResults = await runTests(exercise, code, stdout || '');
   displayTestResults(testResults);
+  if (isMobile()) switchMobileContentTab('output');
 
   // Check if all passed
   const allPass = testResults.every(r => r.pass) && !stderr;
@@ -761,10 +770,54 @@ function switchOutputTab(name) {
 }
 
 function switchPanel(name) {
+  const isMobile = window.innerWidth <= 768;
+  const sidebar = document.querySelector('.sidebar');
+  const wasActive = document.querySelector(`.activity-btn[data-panel="${name}"]`)?.classList.contains('active');
+
   document.querySelectorAll('.activity-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelector(`.activity-btn[data-panel="${name}"]`).classList.add('active');
   document.getElementById(`panel-${name}`).classList.add('active');
+
+  if (isMobile) {
+    // Toggle sidebar: if already open on same panel, close it; otherwise open
+    if (wasActive && sidebar.classList.contains('open')) {
+      closeSidebar();
+    } else {
+      openSidebar();
+    }
+  }
+}
+
+// ===== Mobile Sidebar =====
+function openSidebar() {
+  document.querySelector('.sidebar').classList.add('open');
+  document.getElementById('sidebar-overlay').classList.add('visible');
+}
+
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('visible');
+}
+
+function isMobile() {
+  return window.innerWidth <= 768;
+}
+
+// ===== Mobile Content Tabs =====
+function switchMobileContentTab(tab) {
+  document.querySelectorAll('.mobile-content-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.mobile-content-tab[data-mobile-tab="${tab}"]`).classList.add('active');
+  document.querySelector('.editor-section').classList.toggle('mobile-active', tab === 'editor');
+  document.querySelector('.output-section').classList.toggle('mobile-active', tab === 'output');
+}
+
+function initMobileContentTabs() {
+  // Set initial mobile state
+  document.querySelector('.editor-section').classList.add('mobile-active');
+  document.querySelectorAll('.mobile-content-tab').forEach(tab => {
+    tab.addEventListener('click', () => switchMobileContentTab(tab.dataset.mobileTab));
+  });
 }
 
 // ===== Editor Setup =====
@@ -867,6 +920,23 @@ async function init() {
     btn.addEventListener('click', () => switchPanel(btn.dataset.panel));
   });
 
+  // Mobile sidebar toggles (hamburger in tab bar & welcome screen)
+  const toggleSidebar = () => {
+    document.querySelector('.sidebar').classList.contains('open') ? closeSidebar() : openSidebar();
+  };
+  document.getElementById('mobile-sidebar-toggle').addEventListener('click', toggleSidebar);
+  const welcomeToggle = document.getElementById('mobile-sidebar-toggle-welcome');
+  if (welcomeToggle) welcomeToggle.addEventListener('click', toggleSidebar);
+
+  // Close sidebar via overlay click
+  document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar);
+
+  // Close sidebar button (× in panel header)
+  document.getElementById('close-sidebar-btn').addEventListener('click', closeSidebar);
+
+  // Mobile content tabs
+  initMobileContentTabs();
+
   // Output tabs
   document.querySelectorAll('.output-tab').forEach(tab => {
     tab.addEventListener('click', () => switchOutputTab(tab.dataset.output));
@@ -883,27 +953,31 @@ async function init() {
   // Resize handle
   setupResizeHandle();
 
-  // Load first incomplete exercise
-  const firstIncomplete = WORLDS.flatMap(w => w.exercises).find(ex => !state.completed.has(ex.id));
-  if (firstIncomplete) {
-    // Open first world by default in explorer
-    const firstHeader = document.querySelector('.world-header');
-    if (firstHeader) {
-      firstHeader.classList.add('open');
-      firstHeader.nextElementSibling.classList.add('open');
-    }
+  // Open first world by default in explorer
+  const firstHeader = document.querySelector('.world-header');
+  if (firstHeader) {
+    firstHeader.classList.add('open');
+    firstHeader.nextElementSibling.classList.add('open');
+  }
+
+  // On mobile: auto-open sidebar on welcome screen so user sees exercises
+  if (isMobile()) {
+    openSidebar();
   }
 }
 
-// ===== Resize Handle =====
+// ===== Resize Handle (desktop only) =====
 function setupResizeHandle() {
   const handle = document.getElementById('resize-handle');
+  if (!handle) return;
+
   const app = document.getElementById('app');
   let dragging = false;
   let startX = 0;
   let startWidth = 0;
 
   handle.addEventListener('mousedown', (e) => {
+    if (isMobile()) return;
     dragging = true;
     startX = e.clientX;
     const sidebar = document.querySelector('.sidebar');
@@ -913,10 +987,11 @@ function setupResizeHandle() {
   });
 
   document.addEventListener('mousemove', (e) => {
-    if (!dragging) return;
+    if (!dragging || isMobile()) return;
     const delta = e.clientX - startX;
+    const activityW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--activity-w'));
     const newWidth = Math.max(180, Math.min(500, startWidth + delta));
-    app.style.gridTemplateColumns = `${parseInt(getComputedStyle(document.documentElement).getPropertyValue('--activity-w'))}px ${newWidth}px 4px 1fr`;
+    app.style.gridTemplateColumns = `${activityW}px ${newWidth}px 4px 1fr`;
   });
 
   document.addEventListener('mouseup', () => {

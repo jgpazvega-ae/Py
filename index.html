@@ -42,6 +42,9 @@
   <!-- XP Popup -->
   <div id="xp-popup" class="xp-popup hidden">+<span id="xp-amount">0</span> XP</div>
 
+  <!-- Sidebar overlay (mobile) -->
+  <div id="sidebar-overlay"></div>
+
   <!-- Main Layout -->
   <div id="app" class="app hidden">
     <!-- Activity Bar -->
@@ -69,25 +72,26 @@
       <div class="panel active" id="panel-explorer">
         <div class="panel-header">
           <span>EXPLORADOR</span>
+          <button class="panel-close-btn" id="close-sidebar-btn" title="Cerrar">✕</button>
         </div>
         <div class="explorer-content" id="explorer-content"></div>
       </div>
 
       <!-- Achievements Panel -->
       <div class="panel" id="panel-achievements">
-        <div class="panel-header"><span>LOGROS</span></div>
+        <div class="panel-header"><span>LOGROS</span><button class="panel-close-btn" onclick="closeSidebar()">✕</button></div>
         <div class="achievements-content" id="achievements-content"></div>
       </div>
 
       <!-- Reference Panel -->
       <div class="panel" id="panel-reference">
-        <div class="panel-header"><span>REFERENCIA PYTHON</span></div>
+        <div class="panel-header"><span>REFERENCIA PYTHON</span><button class="panel-close-btn" onclick="closeSidebar()">✕</button></div>
         <div class="reference-content" id="reference-content"></div>
       </div>
 
       <!-- Settings Panel -->
       <div class="panel" id="panel-settings">
-        <div class="panel-header"><span>CONFIGURACIÓN</span></div>
+        <div class="panel-header"><span>CONFIGURACIÓN</span><button class="panel-close-btn" onclick="closeSidebar()">✕</button></div>
         <div class="settings-content">
           <div class="settings-item">
             <label>Tema del editor</label>
@@ -125,6 +129,14 @@
     <div class="main-content">
       <!-- Welcome Screen -->
       <div id="welcome-screen">
+        <!-- Mobile header for welcome screen -->
+        <div class="welcome-mobile-header">
+          <button class="mobile-sidebar-toggle" id="mobile-sidebar-toggle-welcome" title="Ver ejercicios">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <span>PyQuest</span>
+          <span></span>
+        </div>
         <div class="welcome-inner">
           <div class="welcome-logo">🐍</div>
           <h1>Bienvenido a <span class="brand">PyQuest</span></h1>
@@ -138,6 +150,9 @@
       <div id="exercise-screen" class="hidden">
         <!-- Tab Bar -->
         <div class="tab-bar">
+          <button class="mobile-sidebar-toggle" id="mobile-sidebar-toggle" title="Mostrar ejercicios">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
           <div class="tab active" id="current-tab">
             <span class="tab-icon">🐍</span>
             <span class="tab-name" id="tab-filename">ejercicio.py</span>
@@ -158,6 +173,12 @@
             <button class="btn-icon" id="prev-btn" title="Ejercicio anterior">‹</button>
             <button class="btn-icon" id="next-btn" title="Ejercicio siguiente">›</button>
           </div>
+        </div>
+
+        <!-- Mobile editor/output tabs -->
+        <div class="mobile-content-tabs">
+          <button class="mobile-content-tab active" data-mobile-tab="editor">✏️ Código</button>
+          <button class="mobile-content-tab" data-mobile-tab="output">▶ Salida</button>
         </div>
 
         <!-- Content Area -->
