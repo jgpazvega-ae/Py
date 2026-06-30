@@ -655,6 +655,54 @@ kbd {
   .hints-panel { right: 0; left: 0; width: auto; border-radius: 0; top: 36px; }
 }
 
+/* ===== Confetti ===== */
+.confetti-piece {
+  position: fixed;
+  top: -12px;
+  pointer-events: none;
+  z-index: 9999;
+  animation: confettiFall linear forwards;
+}
+@keyframes confettiFall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+/* ===== FAB Run Button (mobile) ===== */
+.fab-run {
+  position: fixed;
+  bottom: calc(var(--status-h) + 16px);
+  right: 16px;
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  background: #0e639c;
+  border: none; color: #fff;
+  font-size: 22px; font-weight: 700;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  cursor: pointer; z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, transform 0.1s;
+}
+.fab-run:hover  { background: #1177bb; }
+.fab-run:active { background: #0a4a80; transform: scale(0.93); }
+.fab-run.hidden { display: none; }
+
+/* ===== Solution Reveal ===== */
+.solution-reveal-wrap {
+  padding: 10px 14px; border-top: 1px solid var(--border);
+  background: var(--bg2); flex-shrink: 0;
+  display: flex; justify-content: center;
+}
+.solution-reveal-wrap.hidden { display: none; }
+.solution-reveal-btn {
+  background: rgba(197,134,192,0.12); border: 1px solid rgba(197,134,192,0.4);
+  color: var(--purple); padding: 7px 16px; border-radius: 6px;
+  cursor: pointer; font-size: 12px; font-weight: 600;
+  transition: background 0.15s;
+}
+.solution-reveal-btn:hover { background: rgba(197,134,192,0.22); }
+
 /* Extra small screens */
 @media (max-width: 400px) {
   :root { --activity-w: 40px; --sidebar-w: calc(100vw - 40px); }

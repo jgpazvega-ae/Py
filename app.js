@@ -13,6 +13,7 @@ const state = {
   currentExercise: null,
   currentHintIndex: 0,
   usedHintThisExercise: false,
+  failedAttempts: {},
   pyodide: null,
   editor: null,
 };
@@ -515,8 +516,17 @@ function loadExercise(exercise) {
 
   // Hints
   document.getElementById('hints-left').textContent = exercise.hints.length - state.currentHintIndex;
+  document.getElementById('hint-btn').disabled = false;
   document.getElementById('hints-panel').classList.add('hidden');
   renderHints(false);
+
+  // Auto-expand description
+  document.getElementById('ex-description').classList.add('open');
+  document.getElementById('desc-toggle').classList.add('open');
+
+  // Hide solution reveal
+  const solWrap = document.getElementById('solution-reveal-wrap');
+  if (solWrap) solWrap.classList.add('hidden');
 
   // Reset terminal
   resetTerminal();
@@ -536,10 +546,11 @@ function loadExercise(exercise) {
     setTimeout(() => state.editor.refresh(), 50);
   }
 
-  // On mobile: close sidebar, show editor tab
+  // On mobile: close sidebar, show editor tab, show FAB
   if (isMobile()) {
     closeSidebar();
     switchMobileContentTab('editor');
+    document.getElementById('fab-run').classList.remove('hidden');
   }
 
   // Rebuild explorer to update active state
@@ -652,6 +663,13 @@ async function executeCode() {
   const allPass = testResults.every(r => r.pass) && !stderr;
   if (allPass) {
     onExerciseComplete(exercise);
+  } else {
+    // Track failed attempts and offer solution after 3
+    state.failedAttempts[exercise.id] = (state.failedAttempts[exercise.id] || 0) + 1;
+    if (state.failedAttempts[exercise.id] >= 3) {
+      const solWrap = document.getElementById('solution-reveal-wrap');
+      if (solWrap) solWrap.classList.remove('hidden');
+    }
   }
 
   btn.textContent = '▶ Ejecutar';
@@ -694,43 +712,69 @@ function displayTestResults(results) {
   switchOutputTab('tests');
 }
 
+// ===== Confetti =====
+function showConfetti() {
+  const colors = ['#4ec9b0','#569cd6','#c586c0','#dcdcaa','#23d18b','#f0c040','#ce9178'];
+  for (let i = 0; i < 70; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    const size = 5 + Math.random() * 7;
+    el.style.cssText = `left:${Math.random()*100}%;background:${colors[i%colors.length]};` +
+      `width:${size}px;height:${size}px;border-radius:${Math.random()>.5?'50%':'2px'};` +
+      `animation-delay:${Math.random()*0.4}s;animation-duration:${0.9+Math.random()*0.7}s`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2200);
+  }
+}
+
 // ===== Exercise Complete =====
 function onExerciseComplete(exercise) {
   const alreadyDone = state.completed.has(exercise.id);
+  let worldJustCompleted = null;
+
   if (!alreadyDone) {
     state.completed.add(exercise.id);
     state.xp += exercise.xp;
     state.sessionCompleted++;
     if (!state.usedHintThisExercise) state.noHintStreak++;
+    state.failedAttempts[exercise.id] = 0;
 
     // Check world completion
     const world = WORLDS.find(w => w.exercises.some(ex => ex.id === exercise.id));
     const worldDone = world.exercises.every(ex => state.completed.has(ex.id));
     if (worldDone && !state.worldsCompleted.includes(world.id)) {
       state.worldsCompleted.push(world.id);
+      worldJustCompleted = world;
     }
 
     checkAchievements();
     saveState();
     updateStatusBar();
     showXpPopup(exercise.xp);
+    if (worldJustCompleted) {
+      setTimeout(showConfetti, 400);
+    }
   }
 
   // Show success overlay
   const starsCount = state.usedHintThisExercise ? 2 : 3;
   state.stars[exercise.id] = Math.max(state.stars[exercise.id] || 0, starsCount);
 
-  const emojis = ['🎉', '🚀', '⭐', '🏆', '💪', '🎯'];
+  const emojis = worldJustCompleted ? ['🏆','🎊','🌟'] : ['🎉', '🚀', '⭐', '💪', '🎯'];
   document.getElementById('success-emoji').textContent = emojis[Math.floor(Math.random() * emojis.length)];
 
   const titles = alreadyDone
     ? ['¡Ya lo resolviste!', '¡Buen repaso!', '¡Perfecto de nuevo!']
-    : ['¡Excelente!', '¡Increíble!', '¡Lo lograste!', '¡Brillante!'];
+    : worldJustCompleted
+      ? [`¡Mundo ${worldJustCompleted.icon} Completado!`]
+      : ['¡Excelente!', '¡Increíble!', '¡Lo lograste!', '¡Brillante!'];
   document.getElementById('success-title').textContent = titles[Math.floor(Math.random() * titles.length)];
 
   document.getElementById('success-msg').textContent = alreadyDone
     ? 'Código perfecto. ¡Ya dominás este ejercicio!'
-    : `¡Completaste "${exercise.title}"!`;
+    : worldJustCompleted
+      ? `¡Completaste "${worldJustCompleted.name}"! Eres imparable 🔥`
+      : `¡Completaste "${exercise.title}"!`;
 
   document.getElementById('success-stars').textContent = '⭐'.repeat(starsCount) + '☆'.repeat(3 - starsCount);
   document.getElementById('success-xp').textContent = alreadyDone ? 'Ejercicio completado ✓' : `+${exercise.xp} XP`;
@@ -893,7 +937,18 @@ async function init() {
 
   // Event listeners
   document.getElementById('run-btn').addEventListener('click', executeCode);
+  document.getElementById('fab-run').addEventListener('click', executeCode);
   document.getElementById('clear-btn').addEventListener('click', resetTerminal);
+
+  document.getElementById('solution-reveal-btn').addEventListener('click', () => {
+    const exercise = state.currentExercise;
+    if (!exercise) return;
+    if (confirm('¿Ver la solución? Esto reemplazará tu código actual.')) {
+      state.editor.setValue(exercise.solution);
+      document.getElementById('solution-reveal-wrap').classList.add('hidden');
+      switchMobileContentTab('editor');
+    }
+  });
 
   document.getElementById('hint-btn').addEventListener('click', revealNextHint);
   document.getElementById('close-hints').addEventListener('click', () => {
