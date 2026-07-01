@@ -60,6 +60,9 @@
       <button class="activity-btn" data-panel="reference" title="Referencia Python">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
       </button>
+      <button class="activity-btn" data-panel="playground" title="Playground libre">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+      </button>
       <div class="activity-spacer"></div>
       <button class="activity-btn" data-panel="settings" title="Configuración">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -247,6 +250,9 @@
               <div class="tests-body" id="tests-output">
                 <div class="tests-empty">Ejecuta tu código para ver los resultados de las pruebas</div>
               </div>
+              <div class="solution-reveal-wrap hidden" id="solution-reveal-wrap">
+                <button class="solution-reveal-btn" id="solution-reveal-btn">👁 Ver solución</button>
+              </div>
             </div>
 
             <!-- Hints Panel -->
@@ -275,8 +281,62 @@
           </div>
         </div>
       </div>
+      <!-- FAB Run button (mobile only) -->
+      <button class="fab-run hidden" id="fab-run" title="Ejecutar código">▶</button>
+
+      <!-- Playground Screen -->
+      <div id="playground-screen" class="hidden">
+        <div class="tab-bar">
+          <button class="mobile-sidebar-toggle" id="mobile-sidebar-toggle-playground" title="Mostrar panel">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div class="tab active">
+            <span class="tab-icon">🎮</span>
+            <span class="tab-name">playground.py</span>
+          </div>
+          <div class="tab-actions">
+            <span class="playground-badge">✨ Modo Libre</span>
+          </div>
+        </div>
+        <div class="mobile-pg-tabs" id="pg-mobile-tabs">
+          <button class="mobile-pg-tab active" data-pg-tab="editor">✏️ Código</button>
+          <button class="mobile-pg-tab" data-pg-tab="output">▶ Salida</button>
+        </div>
+        <div class="playground-area">
+          <div class="pg-editor-section" id="pg-editor-section">
+            <div class="editor-wrap">
+              <div class="editor-toolbar">
+                <span class="editor-label">
+                  <span class="python-badge">Python 3</span>
+                  <span>playground.py</span>
+                </span>
+                <div class="editor-actions">
+                  <button class="btn-reset-code" id="pg-reset-btn" title="Limpiar editor">↺</button>
+                  <button class="btn-run" id="pg-run-btn">▶ Ejecutar <kbd>Ctrl+↵</kbd></button>
+                </div>
+              </div>
+              <div id="pg-editor-container"></div>
+            </div>
+          </div>
+          <div class="pg-output-section" id="pg-output-section">
+            <div class="terminal-header">
+              <span class="terminal-dot red"></span>
+              <span class="terminal-dot yellow"></span>
+              <span class="terminal-dot green"></span>
+              <span class="terminal-title">Python 3.11 (Pyodide)</span>
+              <button class="clear-btn" id="pg-clear-btn">limpiar</button>
+            </div>
+            <div class="terminal-body" id="pg-terminal">
+              <div class="terminal-welcome">$ python playground.py</div>
+              <div class="terminal-hint-text">Escribe cualquier código Python y presiona ▶ Ejecutar</div>
+            </div>
+          </div>
+        </div>
+        <button class="fab-run hidden" id="pg-fab-run" title="Ejecutar código">▶</button>
+      </div>
     </div>
   </div>
+
 
   <!-- Status Bar -->
   <div class="status-bar" id="status-bar">

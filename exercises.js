@@ -31,7 +31,7 @@ const WORLDS = [
         description: "Una variable es como una caja con nombre que guarda un valor. `nombre = \"Ana\"` crea una variable llamada nombre.",
         story: "🤖 PyBot dice: ¡Yo también tengo un nombre! Se llama PyBot. ¿Cómo te llamas tú? Guárdalo en una variable.",
         instructions: "Crea una variable `nombre` con tu nombre y otra `edad` con tu edad. Luego imprime ambas.",
-        starter: '# Crea las variables (reemplaza los ?)\nnombre = ?\nedad = ?\n\n# Imprime las variables\nprint(nombre)\nprint(edad)\n',
+        starter: '# Crea las variables (cambia los valores)\nnombre = "tu nombre"\nedad = 0\n\n# Imprime las variables\nprint(nombre)\nprint(edad)\n',
         solution: 'nombre = "Juan"\nedad = 25\nprint(nombre)\nprint(edad)',
         tests: [
           { type: "has_variable", name: "nombre" },

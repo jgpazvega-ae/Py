@@ -13,8 +13,10 @@ const state = {
   currentExercise: null,
   currentHintIndex: 0,
   usedHintThisExercise: false,
+  failedAttempts: {},
   pyodide: null,
   editor: null,
+  pgEditor: null,
 };
 
 const XP_PER_LEVEL = 500;
@@ -479,6 +481,8 @@ function loadExercise(exercise) {
 
   // Show exercise screen
   document.getElementById('welcome-screen').classList.add('hidden');
+  document.getElementById('playground-screen').classList.add('hidden');
+  document.getElementById('pg-fab-run').classList.add('hidden');
   const screen = document.getElementById('exercise-screen');
   screen.classList.remove('hidden');
 
@@ -515,8 +519,17 @@ function loadExercise(exercise) {
 
   // Hints
   document.getElementById('hints-left').textContent = exercise.hints.length - state.currentHintIndex;
+  document.getElementById('hint-btn').disabled = false;
   document.getElementById('hints-panel').classList.add('hidden');
   renderHints(false);
+
+  // Auto-expand description
+  document.getElementById('ex-description').classList.add('open');
+  document.getElementById('desc-toggle').classList.add('open');
+
+  // Hide solution reveal
+  const solWrap = document.getElementById('solution-reveal-wrap');
+  if (solWrap) solWrap.classList.add('hidden');
 
   // Reset terminal
   resetTerminal();
@@ -536,10 +549,11 @@ function loadExercise(exercise) {
     setTimeout(() => state.editor.refresh(), 50);
   }
 
-  // On mobile: close sidebar, show editor tab
+  // On mobile: close sidebar, show editor tab, show FAB
   if (isMobile()) {
     closeSidebar();
     switchMobileContentTab('editor');
+    document.getElementById('fab-run').classList.remove('hidden');
   }
 
   // Rebuild explorer to update active state
@@ -652,6 +666,13 @@ async function executeCode() {
   const allPass = testResults.every(r => r.pass) && !stderr;
   if (allPass) {
     onExerciseComplete(exercise);
+  } else {
+    // Track failed attempts and offer solution after 3
+    state.failedAttempts[exercise.id] = (state.failedAttempts[exercise.id] || 0) + 1;
+    if (state.failedAttempts[exercise.id] >= 3) {
+      const solWrap = document.getElementById('solution-reveal-wrap');
+      if (solWrap) solWrap.classList.remove('hidden');
+    }
   }
 
   btn.textContent = '▶ Ejecutar';
@@ -694,43 +715,69 @@ function displayTestResults(results) {
   switchOutputTab('tests');
 }
 
+// ===== Confetti =====
+function showConfetti() {
+  const colors = ['#4ec9b0','#569cd6','#c586c0','#dcdcaa','#23d18b','#f0c040','#ce9178'];
+  for (let i = 0; i < 70; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    const size = 5 + Math.random() * 7;
+    el.style.cssText = `left:${Math.random()*100}%;background:${colors[i%colors.length]};` +
+      `width:${size}px;height:${size}px;border-radius:${Math.random()>.5?'50%':'2px'};` +
+      `animation-delay:${Math.random()*0.4}s;animation-duration:${0.9+Math.random()*0.7}s`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2200);
+  }
+}
+
 // ===== Exercise Complete =====
 function onExerciseComplete(exercise) {
   const alreadyDone = state.completed.has(exercise.id);
+  let worldJustCompleted = null;
+
   if (!alreadyDone) {
     state.completed.add(exercise.id);
     state.xp += exercise.xp;
     state.sessionCompleted++;
     if (!state.usedHintThisExercise) state.noHintStreak++;
+    state.failedAttempts[exercise.id] = 0;
 
     // Check world completion
     const world = WORLDS.find(w => w.exercises.some(ex => ex.id === exercise.id));
     const worldDone = world.exercises.every(ex => state.completed.has(ex.id));
     if (worldDone && !state.worldsCompleted.includes(world.id)) {
       state.worldsCompleted.push(world.id);
+      worldJustCompleted = world;
     }
 
     checkAchievements();
     saveState();
     updateStatusBar();
     showXpPopup(exercise.xp);
+    if (worldJustCompleted) {
+      setTimeout(showConfetti, 400);
+    }
   }
 
   // Show success overlay
   const starsCount = state.usedHintThisExercise ? 2 : 3;
   state.stars[exercise.id] = Math.max(state.stars[exercise.id] || 0, starsCount);
 
-  const emojis = ['🎉', '🚀', '⭐', '🏆', '💪', '🎯'];
+  const emojis = worldJustCompleted ? ['🏆','🎊','🌟'] : ['🎉', '🚀', '⭐', '💪', '🎯'];
   document.getElementById('success-emoji').textContent = emojis[Math.floor(Math.random() * emojis.length)];
 
   const titles = alreadyDone
     ? ['¡Ya lo resolviste!', '¡Buen repaso!', '¡Perfecto de nuevo!']
-    : ['¡Excelente!', '¡Increíble!', '¡Lo lograste!', '¡Brillante!'];
+    : worldJustCompleted
+      ? [`¡Mundo ${worldJustCompleted.icon} Completado!`]
+      : ['¡Excelente!', '¡Increíble!', '¡Lo lograste!', '¡Brillante!'];
   document.getElementById('success-title').textContent = titles[Math.floor(Math.random() * titles.length)];
 
   document.getElementById('success-msg').textContent = alreadyDone
     ? 'Código perfecto. ¡Ya dominás este ejercicio!'
-    : `¡Completaste "${exercise.title}"!`;
+    : worldJustCompleted
+      ? `¡Completaste "${worldJustCompleted.name}"! Eres imparable 🔥`
+      : `¡Completaste "${exercise.title}"!`;
 
   document.getElementById('success-stars').textContent = '⭐'.repeat(starsCount) + '☆'.repeat(3 - starsCount);
   document.getElementById('success-xp').textContent = alreadyDone ? 'Ejercicio completado ✓' : `+${exercise.xp} XP`;
@@ -831,6 +878,105 @@ function initMobileContentTabs() {
   });
 }
 
+// ===== Playground =====
+function initPlaygroundEditor() {
+  const savedCode = localStorage.getItem('pyquest_playground') ||
+    '# Escribe aquí cualquier código Python\n# No hay reglas — experimenta libremente!\n\nprint("¡Hola, Mundo!")\n';
+  state.pgEditor = CodeMirror(document.getElementById('pg-editor-container'), {
+    value: savedCode,
+    mode: 'python',
+    theme: state.editor ? state.editor.getOption('theme') : 'dracula',
+    lineNumbers: true,
+    matchBrackets: true,
+    autoCloseBrackets: true,
+    indentUnit: 4,
+    tabSize: 4,
+    indentWithTabs: false,
+    lineWrapping: true,
+    extraKeys: {
+      'Ctrl-Enter': executePlayground,
+      'Cmd-Enter': executePlayground,
+      'Tab': (cm) => {
+        if (cm.somethingSelected()) cm.indentSelection('add');
+        else cm.replaceSelection('    ', 'end');
+      },
+      'Ctrl-/': (cm) => cm.execCommand('toggleComment'),
+    },
+  });
+}
+
+function openPlayground() {
+  document.querySelectorAll('.activity-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.activity-btn[data-panel="playground"]').classList.add('active');
+
+  document.getElementById('welcome-screen').classList.add('hidden');
+  document.getElementById('exercise-screen').classList.add('hidden');
+  document.getElementById('fab-run').classList.add('hidden');
+  document.getElementById('playground-screen').classList.remove('hidden');
+
+  if (!state.pgEditor) {
+    initPlaygroundEditor();
+  } else {
+    if (state.editor) state.pgEditor.setOption('theme', state.editor.getOption('theme'));
+    setTimeout(() => state.pgEditor.refresh(), 50);
+  }
+
+  if (isMobile()) {
+    closeSidebar();
+    document.getElementById('pg-fab-run').classList.remove('hidden');
+    switchPlaygroundTab('editor');
+  }
+}
+
+async function executePlayground() {
+  if (!state.pgEditor) return;
+  const code = state.pgEditor.getValue();
+  localStorage.setItem('pyquest_playground', code);
+
+  const btn = document.getElementById('pg-run-btn');
+  btn.textContent = '⏳ Ejecutando...';
+  btn.disabled = true;
+
+  const terminal = document.getElementById('pg-terminal');
+  terminal.innerHTML = '<div class="terminal-prompt">$ python playground.py</div>';
+
+  const { stdout, stderr } = await runPython(code);
+
+  if (stdout) {
+    stdout.split('\n').forEach(line => {
+      const div = document.createElement('div');
+      div.className = 'terminal-output-line';
+      div.textContent = line;
+      terminal.appendChild(div);
+    });
+  }
+  if (stderr) {
+    const div = document.createElement('div');
+    div.className = 'terminal-output-line error';
+    div.textContent = '❌ ' + stderr;
+    terminal.appendChild(div);
+  }
+  if (!stdout && !stderr) {
+    const div = document.createElement('div');
+    div.className = 'terminal-output-line info';
+    div.textContent = '(sin salida)';
+    terminal.appendChild(div);
+  }
+
+  if (isMobile()) switchPlaygroundTab('output');
+
+  btn.innerHTML = '▶ Ejecutar <kbd>Ctrl+↵</kbd>';
+  btn.disabled = false;
+}
+
+function switchPlaygroundTab(tab) {
+  document.querySelectorAll('.mobile-pg-tab').forEach(t => t.classList.remove('active'));
+  const tabBtn = document.querySelector(`.mobile-pg-tab[data-pg-tab="${tab}"]`);
+  if (tabBtn) tabBtn.classList.add('active');
+  document.getElementById('pg-editor-section').classList.toggle('mobile-active', tab === 'editor');
+  document.getElementById('pg-output-section').classList.toggle('mobile-active', tab === 'output');
+}
+
 // ===== Editor Setup =====
 function initEditor() {
   const container = document.getElementById('editor-container');
@@ -861,11 +1007,14 @@ function initEditor() {
   // Theme select
   document.getElementById('theme-select').addEventListener('change', (e) => {
     state.editor.setOption('theme', e.target.value);
+    if (state.pgEditor) state.pgEditor.setOption('theme', e.target.value);
   });
 
   // Font size select
   document.getElementById('font-select').addEventListener('change', (e) => {
-    document.querySelector('.CodeMirror').style.fontSize = e.target.value + 'px';
+    document.querySelectorAll('.CodeMirror').forEach(el => {
+      el.style.fontSize = e.target.value + 'px';
+    });
   });
 }
 
@@ -893,7 +1042,40 @@ async function init() {
 
   // Event listeners
   document.getElementById('run-btn').addEventListener('click', executeCode);
+  document.getElementById('fab-run').addEventListener('click', executeCode);
   document.getElementById('clear-btn').addEventListener('click', resetTerminal);
+
+  // Playground
+  document.getElementById('pg-run-btn').addEventListener('click', executePlayground);
+  document.getElementById('pg-fab-run').addEventListener('click', executePlayground);
+  document.getElementById('pg-clear-btn').addEventListener('click', () => {
+    document.getElementById('pg-terminal').innerHTML = `
+      <div class="terminal-welcome">$ python playground.py</div>
+      <div class="terminal-hint-text">Escribe cualquier código Python y presiona ▶ Ejecutar</div>
+    `;
+  });
+  document.getElementById('pg-reset-btn').addEventListener('click', () => {
+    if (state.pgEditor && confirm('¿Limpiar el editor del playground?')) {
+      state.pgEditor.setValue('# Escribe aquí cualquier código Python\n\n');
+      localStorage.removeItem('pyquest_playground');
+    }
+  });
+  document.getElementById('mobile-sidebar-toggle-playground').addEventListener('click', () => {
+    document.querySelector('.sidebar').classList.contains('open') ? closeSidebar() : openSidebar();
+  });
+  document.querySelectorAll('.mobile-pg-tab').forEach(tab => {
+    tab.addEventListener('click', () => switchPlaygroundTab(tab.dataset.pgTab));
+  });
+
+  document.getElementById('solution-reveal-btn').addEventListener('click', () => {
+    const exercise = state.currentExercise;
+    if (!exercise) return;
+    if (confirm('¿Ver la solución? Esto reemplazará tu código actual.')) {
+      state.editor.setValue(exercise.solution);
+      document.getElementById('solution-reveal-wrap').classList.add('hidden');
+      switchMobileContentTab('editor');
+    }
+  });
 
   document.getElementById('hint-btn').addEventListener('click', revealNextHint);
   document.getElementById('close-hints').addEventListener('click', () => {
@@ -928,7 +1110,10 @@ async function init() {
 
   // Activity bar
   document.querySelectorAll('.activity-btn').forEach(btn => {
-    btn.addEventListener('click', () => switchPanel(btn.dataset.panel));
+    btn.addEventListener('click', () => {
+      if (btn.dataset.panel === 'playground') openPlayground();
+      else switchPanel(btn.dataset.panel);
+    });
   });
 
   // Mobile sidebar toggles (hamburger in tab bar & welcome screen)
