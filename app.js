@@ -16,6 +16,7 @@ const state = {
   failedAttempts: {},
   pyodide: null,
   editor: null,
+  pgEditor: null,
 };
 
 const XP_PER_LEVEL = 500;
@@ -480,6 +481,8 @@ function loadExercise(exercise) {
 
   // Show exercise screen
   document.getElementById('welcome-screen').classList.add('hidden');
+  document.getElementById('playground-screen').classList.add('hidden');
+  document.getElementById('pg-fab-run').classList.add('hidden');
   const screen = document.getElementById('exercise-screen');
   screen.classList.remove('hidden');
 
@@ -875,6 +878,105 @@ function initMobileContentTabs() {
   });
 }
 
+// ===== Playground =====
+function initPlaygroundEditor() {
+  const savedCode = localStorage.getItem('pyquest_playground') ||
+    '# Escribe aquí cualquier código Python\n# No hay reglas — experimenta libremente!\n\nprint("¡Hola, Mundo!")\n';
+  state.pgEditor = CodeMirror(document.getElementById('pg-editor-container'), {
+    value: savedCode,
+    mode: 'python',
+    theme: state.editor ? state.editor.getOption('theme') : 'dracula',
+    lineNumbers: true,
+    matchBrackets: true,
+    autoCloseBrackets: true,
+    indentUnit: 4,
+    tabSize: 4,
+    indentWithTabs: false,
+    lineWrapping: true,
+    extraKeys: {
+      'Ctrl-Enter': executePlayground,
+      'Cmd-Enter': executePlayground,
+      'Tab': (cm) => {
+        if (cm.somethingSelected()) cm.indentSelection('add');
+        else cm.replaceSelection('    ', 'end');
+      },
+      'Ctrl-/': (cm) => cm.execCommand('toggleComment'),
+    },
+  });
+}
+
+function openPlayground() {
+  document.querySelectorAll('.activity-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.activity-btn[data-panel="playground"]').classList.add('active');
+
+  document.getElementById('welcome-screen').classList.add('hidden');
+  document.getElementById('exercise-screen').classList.add('hidden');
+  document.getElementById('fab-run').classList.add('hidden');
+  document.getElementById('playground-screen').classList.remove('hidden');
+
+  if (!state.pgEditor) {
+    initPlaygroundEditor();
+  } else {
+    if (state.editor) state.pgEditor.setOption('theme', state.editor.getOption('theme'));
+    setTimeout(() => state.pgEditor.refresh(), 50);
+  }
+
+  if (isMobile()) {
+    closeSidebar();
+    document.getElementById('pg-fab-run').classList.remove('hidden');
+    switchPlaygroundTab('editor');
+  }
+}
+
+async function executePlayground() {
+  if (!state.pgEditor) return;
+  const code = state.pgEditor.getValue();
+  localStorage.setItem('pyquest_playground', code);
+
+  const btn = document.getElementById('pg-run-btn');
+  btn.textContent = '⏳ Ejecutando...';
+  btn.disabled = true;
+
+  const terminal = document.getElementById('pg-terminal');
+  terminal.innerHTML = '<div class="terminal-prompt">$ python playground.py</div>';
+
+  const { stdout, stderr } = await runPython(code);
+
+  if (stdout) {
+    stdout.split('\n').forEach(line => {
+      const div = document.createElement('div');
+      div.className = 'terminal-output-line';
+      div.textContent = line;
+      terminal.appendChild(div);
+    });
+  }
+  if (stderr) {
+    const div = document.createElement('div');
+    div.className = 'terminal-output-line error';
+    div.textContent = '❌ ' + stderr;
+    terminal.appendChild(div);
+  }
+  if (!stdout && !stderr) {
+    const div = document.createElement('div');
+    div.className = 'terminal-output-line info';
+    div.textContent = '(sin salida)';
+    terminal.appendChild(div);
+  }
+
+  if (isMobile()) switchPlaygroundTab('output');
+
+  btn.innerHTML = '▶ Ejecutar <kbd>Ctrl+↵</kbd>';
+  btn.disabled = false;
+}
+
+function switchPlaygroundTab(tab) {
+  document.querySelectorAll('.mobile-pg-tab').forEach(t => t.classList.remove('active'));
+  const tabBtn = document.querySelector(`.mobile-pg-tab[data-pg-tab="${tab}"]`);
+  if (tabBtn) tabBtn.classList.add('active');
+  document.getElementById('pg-editor-section').classList.toggle('mobile-active', tab === 'editor');
+  document.getElementById('pg-output-section').classList.toggle('mobile-active', tab === 'output');
+}
+
 // ===== Editor Setup =====
 function initEditor() {
   const container = document.getElementById('editor-container');
@@ -905,11 +1007,14 @@ function initEditor() {
   // Theme select
   document.getElementById('theme-select').addEventListener('change', (e) => {
     state.editor.setOption('theme', e.target.value);
+    if (state.pgEditor) state.pgEditor.setOption('theme', e.target.value);
   });
 
   // Font size select
   document.getElementById('font-select').addEventListener('change', (e) => {
-    document.querySelector('.CodeMirror').style.fontSize = e.target.value + 'px';
+    document.querySelectorAll('.CodeMirror').forEach(el => {
+      el.style.fontSize = e.target.value + 'px';
+    });
   });
 }
 
@@ -939,6 +1044,28 @@ async function init() {
   document.getElementById('run-btn').addEventListener('click', executeCode);
   document.getElementById('fab-run').addEventListener('click', executeCode);
   document.getElementById('clear-btn').addEventListener('click', resetTerminal);
+
+  // Playground
+  document.getElementById('pg-run-btn').addEventListener('click', executePlayground);
+  document.getElementById('pg-fab-run').addEventListener('click', executePlayground);
+  document.getElementById('pg-clear-btn').addEventListener('click', () => {
+    document.getElementById('pg-terminal').innerHTML = `
+      <div class="terminal-welcome">$ python playground.py</div>
+      <div class="terminal-hint-text">Escribe cualquier código Python y presiona ▶ Ejecutar</div>
+    `;
+  });
+  document.getElementById('pg-reset-btn').addEventListener('click', () => {
+    if (state.pgEditor && confirm('¿Limpiar el editor del playground?')) {
+      state.pgEditor.setValue('# Escribe aquí cualquier código Python\n\n');
+      localStorage.removeItem('pyquest_playground');
+    }
+  });
+  document.getElementById('mobile-sidebar-toggle-playground').addEventListener('click', () => {
+    document.querySelector('.sidebar').classList.contains('open') ? closeSidebar() : openSidebar();
+  });
+  document.querySelectorAll('.mobile-pg-tab').forEach(tab => {
+    tab.addEventListener('click', () => switchPlaygroundTab(tab.dataset.pgTab));
+  });
 
   document.getElementById('solution-reveal-btn').addEventListener('click', () => {
     const exercise = state.currentExercise;
@@ -983,7 +1110,10 @@ async function init() {
 
   // Activity bar
   document.querySelectorAll('.activity-btn').forEach(btn => {
-    btn.addEventListener('click', () => switchPanel(btn.dataset.panel));
+    btn.addEventListener('click', () => {
+      if (btn.dataset.panel === 'playground') openPlayground();
+      else switchPanel(btn.dataset.panel);
+    });
   });
 
   // Mobile sidebar toggles (hamburger in tab bar & welcome screen)
