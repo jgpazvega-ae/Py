@@ -666,6 +666,124 @@ const WORLDS = [
         ]
       }
     ]
+  },
+  {
+    id: 7,
+    name: "Nivel Pro",
+    icon: "💼",
+    color: "#4FC1FF",
+    description: "Programación orientada a objetos: el nivel que separa a un principiante de un profesional",
+    exercises: [
+      {
+        id: "7-1",
+        title: "Clases y objetos: Cuenta Bancaria",
+        xp: 250,
+        description: "Una clase es un molde para crear objetos. `__init__` inicializa sus atributos; `self` referencia al propio objeto.",
+        story: "🏗️ PyBot dice: ¡Bienvenido al Nivel Pro! Las clases son el corazón de la programación orientada a objetos. Toda entrevista técnica seria las evalúa.",
+        instructions: "Completa la clase `CuentaBancaria` con `depositar(self, monto)` y `retirar(self, monto)` (validando fondos suficientes). Crea una cuenta y prueba ambos métodos.",
+        starter: 'class CuentaBancaria:\n    def __init__(self, titular, saldo=0):\n        self.titular = titular\n        self.saldo = saldo\n\n    def depositar(self, monto):\n        # Suma el monto al saldo e imprime confirmación\n        pass\n\n    def retirar(self, monto):\n        # Verifica fondos suficientes antes de restar\n        pass\n\ncuenta = CuentaBancaria("Ana", 100)\ncuenta.depositar(50)\ncuenta.retirar(30)\ncuenta.retirar(1000)\n',
+        solution: 'class CuentaBancaria:\n    def __init__(self, titular, saldo=0):\n        self.titular = titular\n        self.saldo = saldo\n\n    def depositar(self, monto):\n        self.saldo += monto\n        print(f"✅ {self.titular} depositó ${monto}. Saldo: ${self.saldo}")\n\n    def retirar(self, monto):\n        if monto > self.saldo:\n            print(f"❌ Fondos insuficientes. Saldo: ${self.saldo}")\n            return\n        self.saldo -= monto\n        print(f"✅ {self.titular} retiró ${monto}. Saldo: ${self.saldo}")\n\ncuenta = CuentaBancaria("Ana", 100)\ncuenta.depositar(50)\ncuenta.retirar(30)\ncuenta.retirar(1000)',
+        tests: [
+          { type: "output_contains", text: "150" },
+          { type: "output_contains", text: "120" },
+          { type: "output_contains", text: "insuficientes" },
+          { type: "has_class" }
+        ],
+        hints: [
+          "Dentro de __init__, self.saldo guarda el saldo inicial de cada objeto",
+          "self.saldo += monto suma el depósito al saldo del objeto",
+          "Antes de retirar, compara: if monto > self.saldo:",
+          "self.saldo -= monto descuenta el retiro cuando hay fondos suficientes"
+        ]
+      },
+      {
+        id: "7-2",
+        title: "Herencia y polimorfismo: Empleados",
+        xp: 275,
+        description: "La herencia permite que una clase (subclase) reutilice y extienda el comportamiento de otra (clase base) con `class Hijo(Padre):`.",
+        story: "🧬 PyBot dice: ¡La herencia evita repetir código! Un Gerente ES un Empleado, pero con un bono extra en su pago.",
+        instructions: "Completa `Gerente(Empleado)` para que herede de `Empleado` con `super()` y sobrescriba `calcular_pago()` sumando un bono.",
+        starter: 'class Empleado:\n    def __init__(self, nombre, salario):\n        self.nombre = nombre\n        self.salario = salario\n\n    def calcular_pago(self):\n        return self.salario\n\nclass Gerente(Empleado):\n    def __init__(self, nombre, salario, bono):\n        # Llama al __init__ de Empleado con super()\n        \n        self.bono = bono\n\n    def calcular_pago(self):\n        # Retorna salario + bono\n        pass\n\nempleados = [Empleado("Luis", 1000), Gerente("Marta", 1500, 300)]\nfor e in empleados:\n    print(f"{e.nombre}: ${e.calcular_pago()}")\n',
+        solution: 'class Empleado:\n    def __init__(self, nombre, salario):\n        self.nombre = nombre\n        self.salario = salario\n\n    def calcular_pago(self):\n        return self.salario\n\nclass Gerente(Empleado):\n    def __init__(self, nombre, salario, bono):\n        super().__init__(nombre, salario)\n        self.bono = bono\n\n    def calcular_pago(self):\n        return self.salario + self.bono\n\nempleados = [Empleado("Luis", 1000), Gerente("Marta", 1500, 300)]\nfor e in empleados:\n    print(f"{e.nombre}: ${e.calcular_pago()}")',
+        tests: [
+          { type: "output_contains", text: "Luis: $1000" },
+          { type: "output_contains", text: "Marta: $1800" },
+          { type: "has_class" },
+          { type: "has_for" }
+        ],
+        hints: [
+          "super().__init__(nombre, salario) llama al constructor de la clase base Empleado",
+          "class Gerente(Empleado): hereda todos los atributos y métodos de Empleado",
+          "Sobrescribe calcular_pago para sumar el bono: return self.salario + self.bono",
+          "El polimorfismo permite que el mismo método calcular_pago() se comporte distinto según la clase"
+        ]
+      },
+      {
+        id: "7-3",
+        title: "Estructura de datos: Pila (Stack)",
+        xp: 300,
+        description: "Una pila (stack) sigue el orden LIFO: el último en entrar es el primero en salir. `.append()` apila, `.pop()` desapila.",
+        story: "📚 PyBot dice: ¡Las pilas están en todas partes! El botón 'deshacer', la pila de llamadas de funciones... Impleméntala tú mismo.",
+        instructions: "Completa la clase `Pila` con `apilar(valor)`, `desapilar()` (retorna None si está vacía) y `esta_vacia()`.",
+        starter: 'class Pila:\n    def __init__(self):\n        self.elementos = []\n\n    def apilar(self, valor):\n        # Agrega el valor al final de la lista\n        pass\n\n    def desapilar(self):\n        # Si está vacía retorna None; si no, quita y retorna el último elemento\n        pass\n\n    def esta_vacia(self):\n        # Retorna True si no hay elementos\n        pass\n\npila = Pila()\npila.apilar(1)\npila.apilar(2)\npila.apilar(3)\nprint(pila.desapilar())\nprint(pila.desapilar())\nprint(pila.esta_vacia())\n',
+        solution: 'class Pila:\n    def __init__(self):\n        self.elementos = []\n\n    def apilar(self, valor):\n        self.elementos.append(valor)\n\n    def desapilar(self):\n        if self.esta_vacia():\n            return None\n        return self.elementos.pop()\n\n    def esta_vacia(self):\n        return len(self.elementos) == 0\n\npila = Pila()\npila.apilar(1)\npila.apilar(2)\npila.apilar(3)\nprint(pila.desapilar())\nprint(pila.desapilar())\nprint(pila.esta_vacia())',
+        tests: [
+          { type: "output_contains", text: "3" },
+          { type: "output_contains", text: "2" },
+          { type: "output_contains", text: "False" },
+          { type: "has_class" }
+        ],
+        hints: [
+          "apilar usa self.elementos.append(valor)",
+          "desapilar usa self.elementos.pop(), que quita y retorna el último elemento",
+          "Antes de desapilar, verifica self.esta_vacia() para evitar errores",
+          "esta_vacia retorna len(self.elementos) == 0"
+        ]
+      },
+      {
+        id: "7-4",
+        title: "Cache LRU simplificado",
+        xp: 350,
+        description: "Un caché LRU (Least Recently Used) descarta el elemento menos usado recientemente cuando se llena. Los diccionarios en Python mantienen el orden de inserción.",
+        story: "🧠 PyBot dice: ¡Pregunta típica en entrevistas de empresas grandes! Un caché con capacidad limitada que olvida lo más viejo.",
+        instructions: "Completa `CacheLRU`: al `obtener(clave)`, mueve la clave al final (más reciente); al `guardar(clave, valor)` con el caché lleno, elimina la clave más antigua antes de insertar.",
+        starter: 'class CacheLRU:\n    def __init__(self, capacidad):\n        self.capacidad = capacidad\n        self.datos = {}\n\n    def obtener(self, clave):\n        if clave not in self.datos:\n            return None\n        # Mueve la clave al final (más reciente): sácala y vuelve a insertarla\n        \n        return self.datos[clave]\n\n    def guardar(self, clave, valor):\n        if clave in self.datos:\n            del self.datos[clave]\n        elif len(self.datos) >= self.capacidad:\n            # Elimina la clave más antigua (la primera del diccionario)\n            \n            pass\n        self.datos[clave] = valor\n\ncache = CacheLRU(2)\ncache.guardar("a", 1)\ncache.guardar("b", 2)\ncache.obtener("a")\ncache.guardar("c", 3)\nprint(list(cache.datos.keys()))\n',
+        solution: 'class CacheLRU:\n    def __init__(self, capacidad):\n        self.capacidad = capacidad\n        self.datos = {}\n\n    def obtener(self, clave):\n        if clave not in self.datos:\n            return None\n        valor = self.datos.pop(clave)\n        self.datos[clave] = valor\n        return valor\n\n    def guardar(self, clave, valor):\n        if clave in self.datos:\n            del self.datos[clave]\n        elif len(self.datos) >= self.capacidad:\n            clave_antigua = next(iter(self.datos))\n            del self.datos[clave_antigua]\n        self.datos[clave] = valor\n\ncache = CacheLRU(2)\ncache.guardar("a", 1)\ncache.guardar("b", 2)\ncache.obtener("a")\ncache.guardar("c", 3)\nprint(list(cache.datos.keys()))',
+        tests: [
+          { type: "output_contains", text: "['a', 'c']" },
+          { type: "has_class" },
+          { type: "runs_without_error" }
+        ],
+        hints: [
+          "obtener debe reinsertar la clave: self.datos.pop(clave) y luego self.datos[clave] = valor",
+          "next(iter(self.datos)) te da la primera clave insertada (la más antigua)",
+          "Cuando el caché está lleno, elimina esa clave antigua con del antes de insertar la nueva",
+          "Un diccionario en Python 3.7+ conserva el orden de inserción de sus claves"
+        ]
+      },
+      {
+        id: "7-5",
+        title: "El Reto Pro: Sistema de reservas",
+        xp: 400,
+        description: "Combina clases, diccionarios y validación de conflictos de horario — un problema real de sistemas de agendamiento.",
+        story: "📅 PyBot dice: ¡El desafío final del Nivel Pro! Un sistema de citas debe evitar que dos personas reserven la misma hora. ¡Demuestra todo lo que aprendiste!",
+        instructions: "Completa `SistemaReservas.reservar(hora, cliente)`: si la hora ya está ocupada, rechaza la reserva; si no, la guarda y confirma.",
+        starter: 'class SistemaReservas:\n    def __init__(self):\n        self.reservas = {}\n\n    def reservar(self, hora, cliente):\n        # Si la hora ya está en self.reservas, rechaza la reserva\n        \n        # Si no, guárdala e imprime confirmación\n        pass\n\n    def cancelar(self, hora):\n        if hora in self.reservas:\n            del self.reservas[hora]\n            print(f"🗑️ Reserva de las {hora} cancelada")\n        else:\n            print(f"⚠️ No hay reserva a las {hora}")\n\nagenda = SistemaReservas()\nagenda.reservar("10:00", "Carlos")\nagenda.reservar("10:00", "Beatriz")\nagenda.cancelar("10:00")\nagenda.reservar("10:00", "Beatriz")\n',
+        solution: 'class SistemaReservas:\n    def __init__(self):\n        self.reservas = {}\n\n    def reservar(self, hora, cliente):\n        if hora in self.reservas:\n            print(f"❌ {hora} ya está reservada por {self.reservas[hora]}")\n            return\n        self.reservas[hora] = cliente\n        print(f"✅ Cita confirmada: {cliente} a las {hora}")\n\n    def cancelar(self, hora):\n        if hora in self.reservas:\n            del self.reservas[hora]\n            print(f"🗑️ Reserva de las {hora} cancelada")\n        else:\n            print(f"⚠️ No hay reserva a las {hora}")\n\nagenda = SistemaReservas()\nagenda.reservar("10:00", "Carlos")\nagenda.reservar("10:00", "Beatriz")\nagenda.cancelar("10:00")\nagenda.reservar("10:00", "Beatriz")',
+        tests: [
+          { type: "output_contains", text: "Carlos" },
+          { type: "output_contains", text: "ya está reservada" },
+          { type: "output_contains", text: "Beatriz a las 10:00" },
+          { type: "has_class" }
+        ],
+        hints: [
+          "if hora in self.reservas: ya existe una cita a esa hora",
+          "Usa return para salir de la función temprano si hay conflicto",
+          "self.reservas[hora] = cliente guarda la nueva reserva",
+          "Después de cancelar(), la hora queda libre para una nueva reserva"
+        ]
+      }
+    ]
   }
 ];
 
@@ -677,6 +795,7 @@ const ACHIEVEMENTS = [
   { id: "world4", name: "Maestro de Listas", desc: "Completa el Mundo 4", icon: "📋", condition: (s) => s.worldsCompleted.includes(4) },
   { id: "world5", name: "Maestro de Funciones", desc: "Completa el Mundo 5", icon: "⚙️", condition: (s) => s.worldsCompleted.includes(5) },
   { id: "world6", name: "Maestro Simulador", desc: "Completa el Mundo 6", icon: "🎮", condition: (s) => s.worldsCompleted.includes(6) },
+  { id: "world7", name: "Programador Pro", desc: "Completa el Mundo 7 (Nivel Pro)", icon: "💼", condition: (s) => s.worldsCompleted.includes(7) },
   { id: "pythonista", name: "¡Pythonista!", desc: "Completa todos los ejercicios", icon: "🐍", condition: (s) => s.completed >= WORLDS.flatMap(w => w.exercises).length },
   { id: "speed_run", name: "Velocista", desc: "Completa 5 ejercicios en una sesión", icon: "⚡", condition: (s) => s.sessionCompleted >= 5 },
   { id: "no_hints", name: "Sin Ayuda", desc: "Completa 3 ejercicios sin usar pistas", icon: "🧠", condition: (s) => s.noHintStreak >= 3 },

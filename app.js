@@ -189,6 +189,16 @@ async function runTests(exercise, code, stdout) {
         detail = pass ? 'Define una función ✓' : 'Necesitas definir una función con def';
         break;
 
+      case 'has_class':
+        pass = /\bclass\s+\w+/.test(code);
+        detail = pass ? 'Define una clase ✓' : 'Necesitas definir una clase con class';
+        break;
+
+      case 'has_try_except':
+        pass = /\btry\s*:/.test(code) && /\bexcept\b/.test(code);
+        detail = pass ? 'Usa try/except ✓' : 'Necesitas usar try/except';
+        break;
+
       case 'has_return':
         pass = /\breturn\b/.test(code);
         detail = pass ? 'Usa return ✓' : 'Necesitas usar return';
