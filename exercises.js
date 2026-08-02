@@ -547,6 +547,125 @@ const WORLDS = [
         ]
       }
     ]
+  },
+  {
+    id: 6,
+    name: "Simulaciones",
+    icon: "🎮",
+    color: "#F0C040",
+    description: "Ejercicios de entrevista: simula objetos del mundo real",
+    exercises: [
+      {
+        id: "6-1",
+        title: "Toggle: Foco on/off",
+        xp: 100,
+        description: "Una variable booleana actúa como interruptor. `not variable` invierte True↔False.",
+        story: "💡 PyBot dice: ¡El truco del botón! En entrevistas piden este patrón constantemente. ¡Domínalo!",
+        instructions: "Crea una función `presionar_boton()` que invierta el estado de `encendido` e imprima si el foco está ENCENDIDO o APAGADO. Llámala 4 veces.",
+        starter: '# Estado del foco\nencendido = False\n\ndef presionar_boton():\n    global encendido\n    # Invierte el estado: True → False, False → True\n    \n    # Imprime el estado actual\n    \n\n# Presiona el botón 4 veces\npresionar_boton()\npresionar_boton()\npresionar_boton()\npresionar_boton()\n',
+        solution: 'encendido = False\n\ndef presionar_boton():\n    global encendido\n    encendido = not encendido\n    if encendido:\n        print("💡 Foco: ENCENDIDO")\n    else:\n        print("⚫ Foco: APAGADO")\n\npresionar_boton()\npresionar_boton()\npresionar_boton()\npresionar_boton()',
+        tests: [
+          { type: "output_contains", text: "ENCENDIDO" },
+          { type: "output_contains", text: "APAGADO" },
+          { type: "has_def" },
+          { type: "runs_without_error" }
+        ],
+        hints: [
+          "Usa `global encendido` dentro de la función para poder modificar la variable",
+          "`encendido = not encendido` invierte True→False y False→True automáticamente",
+          "Luego un if/else imprime el estado: ENCENDIDO o APAGADO",
+          'if encendido:\n    print("💡 Foco: ENCENDIDO")\nelse:\n    print("⚫ Foco: APAGADO")'
+        ]
+      },
+      {
+        id: "6-2",
+        title: "Semáforo: ciclo de luces",
+        xp: 125,
+        description: "El operador `%` cicla entre valores. `(i + 1) % n` va 0→1→2→0→...",
+        story: "🚦 PyBot dice: ¡Los semáforos nunca se detienen! El módulo `%` es la clave para ciclar infinitamente.",
+        instructions: "Crea `cambiar_luz()` que avance al siguiente estado del semáforo usando módulo. Cicla entre Verde, Amarillo y Rojo.",
+        starter: 'estados = ["🟢 Verde", "🟡 Amarillo", "🔴 Rojo"]\nindice = 0\n\ndef cambiar_luz():\n    global indice\n    # Avanza al siguiente índice; vuelve a 0 al pasar el último\n    \n    print(f"Semáforo: {estados[indice]}")\n\nprint(f"Semáforo: {estados[indice]}")\ncambiar_luz()\ncambiar_luz()\ncambiar_luz()\ncambiar_luz()\n',
+        solution: 'estados = ["🟢 Verde", "🟡 Amarillo", "🔴 Rojo"]\nindice = 0\n\ndef cambiar_luz():\n    global indice\n    indice = (indice + 1) % len(estados)\n    print(f"Semáforo: {estados[indice]}")\n\nprint(f"Semáforo: {estados[indice]}")\ncambiar_luz()\ncambiar_luz()\ncambiar_luz()\ncambiar_luz()',
+        tests: [
+          { type: "output_contains", text: "Verde" },
+          { type: "output_contains", text: "Amarillo" },
+          { type: "output_contains", text: "Rojo" },
+          { type: "has_def" }
+        ],
+        hints: [
+          "Usa `global indice` para poder modificar la variable desde la función",
+          "`(indice + 1) % len(estados)` cicla: 0→1→2→0→1→2...",
+          "Con 3 estados, después del índice 2 el módulo vuelve al 0",
+          "indice = (indice + 1) % len(estados)"
+        ]
+      },
+      {
+        id: "6-3",
+        title: "Elevador de pisos",
+        xp: 225,
+        description: "Simula un elevador que rastrea el piso actual y muestra el recorrido. Combina `global`, condicionales y bucles.",
+        story: "🏢 PyBot dice: ¡El clásico de entrevistas! Te piden simular un elevador. Ahora sabes cómo hacerlo.",
+        instructions: "Completa `ir_a_piso(destino)`: muestra cada piso al subir (↑) o bajar (↓) hasta llegar al destino.",
+        starter: 'piso_actual = 1\nMAX_PISO = 10\n\ndef ir_a_piso(destino):\n    global piso_actual\n    if destino < 1 or destino > MAX_PISO:\n        print(f"⚠️ Piso inválido (1-{MAX_PISO})")\n        return\n    # Si el destino es mayor al piso actual: SUBIR\n    # for p in range(piso_actual + 1, destino + 1): ...\n    \n    # Si el destino es menor: BAJAR\n    # for p in range(piso_actual - 1, destino - 1, -1): ...\n    \n    piso_actual = destino\n    print(f"🏢 ¡Llegaste al piso {piso_actual}!")\n\nprint(f"📍 Inicio: piso {piso_actual}")\nir_a_piso(4)\nir_a_piso(2)\n',
+        solution: 'piso_actual = 1\nMAX_PISO = 10\n\ndef ir_a_piso(destino):\n    global piso_actual\n    if destino < 1 or destino > MAX_PISO:\n        print(f"⚠️ Piso inválido (1-{MAX_PISO})")\n        return\n    if destino > piso_actual:\n        for p in range(piso_actual + 1, destino + 1):\n            print(f"↑ Piso {p}")\n    elif destino < piso_actual:\n        for p in range(piso_actual - 1, destino - 1, -1):\n            print(f"↓ Piso {p}")\n    piso_actual = destino\n    print(f"🏢 ¡Llegaste al piso {piso_actual}!")\n\nprint(f"📍 Inicio: piso {piso_actual}")\nir_a_piso(4)\nir_a_piso(2)',
+        tests: [
+          { type: "output_contains", text: "↑ Piso 4" },
+          { type: "output_contains", text: "↓ Piso 2" },
+          { type: "has_def" },
+          { type: "has_for" }
+        ],
+        hints: [
+          "Usa `global piso_actual` para modificar el piso desde la función",
+          "Para subir: `for p in range(piso_actual + 1, destino + 1):`",
+          "Para bajar: `for p in range(piso_actual - 1, destino - 1, -1):`",
+          "El tercer argumento `-1` en range hace que el contador vaya hacia atrás"
+        ]
+      },
+      {
+        id: "6-4",
+        title: "Cajero automático (ATM)",
+        xp: 200,
+        description: "Un cajero valida antes de operar: `if cantidad > saldo` previene retiros imposibles.",
+        story: "💳 PyBot dice: ¡Los bancos también usan Python! Validar antes de operar es buena práctica de programación.",
+        instructions: "Completa `depositar(cantidad)` y `retirar(cantidad)`. Valida montos negativos y fondos insuficientes.",
+        starter: 'saldo = 500\n\ndef depositar(cantidad):\n    global saldo\n    if cantidad <= 0:\n        print("❌ Cantidad inválida")\n        return\n    # Suma al saldo e imprime el nuevo saldo\n    \n\ndef retirar(cantidad):\n    global saldo\n    if cantidad <= 0:\n        print("❌ Cantidad inválida")\n        return\n    # Verifica si hay saldo suficiente\n    \n    # Si hay saldo: descuenta e imprime el nuevo saldo\n    \n\nprint(f"💳 Saldo inicial: ${saldo}")\ndepositar(300)\nretirar(100)\nretirar(1000)\n',
+        solution: 'saldo = 500\n\ndef depositar(cantidad):\n    global saldo\n    if cantidad <= 0:\n        print("❌ Cantidad inválida")\n        return\n    saldo += cantidad\n    print(f"✅ Depósito: +${cantidad}. Saldo: ${saldo}")\n\ndef retirar(cantidad):\n    global saldo\n    if cantidad <= 0:\n        print("❌ Cantidad inválida")\n        return\n    if cantidad > saldo:\n        print(f"❌ Fondos insuficientes. Saldo: ${saldo}")\n        return\n    saldo -= cantidad\n    print(f"✅ Retiro: -${cantidad}. Saldo: ${saldo}")\n\nprint(f"💳 Saldo inicial: ${saldo}")\ndepositar(300)\nretirar(100)\nretirar(1000)',
+        tests: [
+          { type: "output_contains", text: "800" },
+          { type: "output_contains", text: "700" },
+          { type: "output_contains", text: "insuficientes" },
+          { type: "has_def" }
+        ],
+        hints: [
+          "`saldo += cantidad` suma el depósito al saldo",
+          "Para retirar, primero: `if cantidad > saldo: print(...) return`",
+          "`saldo -= cantidad` descuenta el retiro",
+          'print(f"✅ Retiro: -${cantidad}. Saldo: ${saldo}")'
+        ]
+      },
+      {
+        id: "6-5",
+        title: "Máquina expendedora",
+        xp: 275,
+        description: "Combina diccionarios, funciones y validaciones en cadena.",
+        story: "🥤 PyBot dice: ¡El reto final de simulaciones! Una máquina que maneja inventario, precios y saldo. ¡A por ello!",
+        instructions: "Completa `comprar(producto)`: verifica existencia, stock y saldo antes de vender. Descuenta precio y stock al comprar.",
+        starter: 'productos = {\n    "café": {"precio": 15, "stock": 3},\n    "agua": {"precio": 10, "stock": 5},\n    "jugo": {"precio": 20, "stock": 2}\n}\nsaldo = 0\n\ndef insertar_dinero(cantidad):\n    global saldo\n    saldo += cantidad\n    print(f"💰 Saldo: ${saldo}")\n\ndef comprar(producto):\n    global saldo\n    # 1. Verifica que el producto exista\n    \n    # 2. Verifica que haya stock\n    \n    # 3. Verifica que haya saldo suficiente\n    \n    # 4. Realiza la compra\n    \n\ninsertar_dinero(50)\ncomprar("café")\ncomprar("jugo")\ncomprar("agua")\n',
+        solution: 'productos = {\n    "café": {"precio": 15, "stock": 3},\n    "agua": {"precio": 10, "stock": 5},\n    "jugo": {"precio": 20, "stock": 2}\n}\nsaldo = 0\n\ndef insertar_dinero(cantidad):\n    global saldo\n    saldo += cantidad\n    print(f"💰 Saldo: ${saldo}")\n\ndef comprar(producto):\n    global saldo\n    if producto not in productos:\n        print(f"❌ {producto} no disponible")\n        return\n    item = productos[producto]\n    if item["stock"] == 0:\n        print(f"❌ Sin stock de {producto}")\n        return\n    precio = item["precio"]\n    if saldo < precio:\n        print(f"❌ Saldo insuficiente. Faltan ${precio - saldo}")\n        return\n    saldo -= precio\n    item["stock"] -= 1\n    print(f"✅ {producto.capitalize()} comprado! Cambio: ${saldo}")\n    saldo = 0\n\ninsertar_dinero(50)\ncomprar("café")\ncomprar("jugo")\ncomprar("agua")',
+        tests: [
+          { type: "output_contains", text: "Saldo: $50" },
+          { type: "output_contains", text: "comprado" },
+          { type: "has_def" },
+          { type: "runs_without_error" }
+        ],
+        hints: [
+          "`if producto not in productos:` verifica si existe en el diccionario",
+          "`item = productos[producto]` accede al diccionario del producto",
+          "`if item[\"stock\"] == 0:` verifica si hay existencias",
+          "`saldo -= precio` y `item[\"stock\"] -= 1` realizan la compra"
+        ]
+      }
+    ]
   }
 ];
 
@@ -557,7 +676,8 @@ const ACHIEVEMENTS = [
   { id: "world3", name: "Maestro de Bucles", desc: "Completa el Mundo 3", icon: "🔁", condition: (s) => s.worldsCompleted.includes(3) },
   { id: "world4", name: "Maestro de Listas", desc: "Completa el Mundo 4", icon: "📋", condition: (s) => s.worldsCompleted.includes(4) },
   { id: "world5", name: "Maestro de Funciones", desc: "Completa el Mundo 5", icon: "⚙️", condition: (s) => s.worldsCompleted.includes(5) },
-  { id: "pythonista", name: "¡Pythonista!", desc: "Completa todos los ejercicios", icon: "🐍", condition: (s) => s.completed >= 25 },
+  { id: "world6", name: "Maestro Simulador", desc: "Completa el Mundo 6", icon: "🎮", condition: (s) => s.worldsCompleted.includes(6) },
+  { id: "pythonista", name: "¡Pythonista!", desc: "Completa todos los ejercicios", icon: "🐍", condition: (s) => s.completed >= WORLDS.flatMap(w => w.exercises).length },
   { id: "speed_run", name: "Velocista", desc: "Completa 5 ejercicios en una sesión", icon: "⚡", condition: (s) => s.sessionCompleted >= 5 },
   { id: "no_hints", name: "Sin Ayuda", desc: "Completa 3 ejercicios sin usar pistas", icon: "🧠", condition: (s) => s.noHintStreak >= 3 },
   { id: "xp_1000", name: "Mil Puntos", desc: "Acumula 1000 XP", icon: "💎", condition: (s) => s.xp >= 1000 },

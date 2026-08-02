@@ -268,7 +268,7 @@ function updateStatusBar() {
   const levelName = LEVELS[level - 1] || LEVELS[LEVELS.length - 1];
   document.getElementById('status-xp').textContent = `⚡ ${state.xp} XP`;
   document.getElementById('status-level').textContent = `Nivel ${level} · ${levelName}`;
-  document.getElementById('status-progress').textContent = `${state.completed.size}/25 ejercicios`;
+  document.getElementById('status-progress').textContent = `${state.completed.size}/${WORLDS.flatMap(w => w.exercises).length} ejercicios`;
 }
 
 // ===== Explorer =====
