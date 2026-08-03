@@ -189,6 +189,16 @@ async function runTests(exercise, code, stdout) {
         detail = pass ? 'Define una función ✓' : 'Necesitas definir una función con def';
         break;
 
+      case 'has_class':
+        pass = /\bclass\s+\w+/.test(code);
+        detail = pass ? 'Define una clase ✓' : 'Necesitas definir una clase con class';
+        break;
+
+      case 'has_try_except':
+        pass = /\btry\s*:/.test(code) && /\bexcept\b/.test(code);
+        detail = pass ? 'Usa try/except ✓' : 'Necesitas usar try/except';
+        break;
+
       case 'has_return':
         pass = /\breturn\b/.test(code);
         detail = pass ? 'Usa return ✓' : 'Necesitas usar return';
@@ -268,7 +278,7 @@ function updateStatusBar() {
   const levelName = LEVELS[level - 1] || LEVELS[LEVELS.length - 1];
   document.getElementById('status-xp').textContent = `⚡ ${state.xp} XP`;
   document.getElementById('status-level').textContent = `Nivel ${level} · ${levelName}`;
-  document.getElementById('status-progress').textContent = `${state.completed.size}/25 ejercicios`;
+  document.getElementById('status-progress').textContent = `${state.completed.size}/${WORLDS.flatMap(w => w.exercises).length} ejercicios`;
 }
 
 // ===== Explorer =====
