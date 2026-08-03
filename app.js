@@ -19,6 +19,8 @@ const state = {
   pgEditor: null,
 };
 
+let initFailed = false;
+
 const XP_PER_LEVEL = 500;
 const LEVELS = [
   'Principiante', 'Aprendiz', 'Novato', 'Practicante', 'Intermedio',
@@ -61,6 +63,7 @@ async function initPyodide() {
   const bar = document.getElementById('loading-bar');
   const status = document.getElementById('loading-status');
   const updateProgress = (pct, msg) => {
+    if (initFailed) return;
     bar.style.width = pct + '%';
     status.textContent = msg;
   };
@@ -1029,22 +1032,54 @@ function initEditor() {
 }
 
 // ===== Init =====
+function showInitError(message) {
+  initFailed = true;
+  const status = document.getElementById('loading-status');
+  const bar = document.getElementById('loading-bar');
+  if (bar) bar.style.background = '#f14c4c';
+  if (status) {
+    status.innerHTML = `⚠️ ${message}<br><button id="retry-load-btn" class="btn-run" style="margin-top:12px;">Reintentar</button>`;
+    document.getElementById('retry-load-btn').addEventListener('click', () => location.reload());
+  }
+}
+
 async function init() {
   loadState();
 
   // Start Pyodide in parallel with UI setup
   const pyodidePromise = initPyodide();
 
-  // Build UI
-  initEditor();
-  buildExplorer();
-  buildAchievements();
-  buildReference();
-  buildWelcome();
-  updateStatusBar();
+  try {
+    if (typeof CodeMirror === 'undefined') {
+      throw new Error('No se pudo cargar el editor de código. Revisa tu conexión a internet.');
+    }
 
-  // Wait for Pyodide
-  await pyodidePromise;
+    // Build UI
+    initEditor();
+    buildExplorer();
+    buildAchievements();
+    buildReference();
+    buildWelcome();
+    updateStatusBar();
+
+    // Wait for Pyodide (with a hard timeout in case the download stalls)
+    const timeoutMs = 60000;
+    await Promise.race([
+      pyodidePromise,
+      new Promise((_, reject) => setTimeout(
+        () => reject(new Error('Python está tardando demasiado en cargar. Revisa tu conexión a internet.')),
+        timeoutMs
+      )),
+    ]);
+
+    if (!state.pyodide) {
+      throw new Error('No se pudo cargar Python. Revisa tu conexión a internet.');
+    }
+  } catch (err) {
+    console.error('Error de inicialización:', err);
+    showInitError(err.message);
+    return;
+  }
 
   // Show app
   document.getElementById('loading-screen').style.display = 'none';
