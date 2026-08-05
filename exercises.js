@@ -664,6 +664,28 @@ const WORLDS = [
           "`if item[\"stock\"] == 0:` verifica si hay existencias",
           "`saldo -= precio` y `item[\"stock\"] -= 1` realizan la compra"
         ]
+      },
+      {
+        id: "6-6",
+        title: "Elevador: múltiples pisos",
+        xp: 250,
+        description: "En la vida real, varias personas presionan botones seguidos. El elevador debe atenderlos en orden, uno por uno, con una cola (lista).",
+        story: "🏢 PyBot dice: ¡Tu elevador es un éxito! Pero ahora varias personas presionan botones al mismo tiempo. ¿Puedes hacer que atienda una cola de solicitudes?",
+        instructions: "Completa `atender_solicitudes(cola)` para que el elevador visite, en orden, cada piso de la lista `cola`, reutilizando `ir_a_piso()`.",
+        starter: 'piso_actual = 1\nMAX_PISO = 10\n\ndef ir_a_piso(destino):\n    global piso_actual\n    if destino < 1 or destino > MAX_PISO:\n        print(f"⚠️ Piso inválido (1-{MAX_PISO})")\n        return\n    if destino > piso_actual:\n        for p in range(piso_actual + 1, destino + 1):\n            print(f"↑ Piso {p}")\n    elif destino < piso_actual:\n        for p in range(piso_actual - 1, destino - 1, -1):\n            print(f"↓ Piso {p}")\n    piso_actual = destino\n    print(f"🏢 ¡Llegaste al piso {piso_actual}!")\n\ndef atender_solicitudes(cola):\n    # Recorre la lista `cola` e imprime cada solicitud,\n    # luego llama a ir_a_piso(destino) para atenderla\n    pass\n\nprint(f"📍 Inicio: piso {piso_actual}")\natender_solicitudes([4, 7, 2, 9])\n',
+        solution: 'piso_actual = 1\nMAX_PISO = 10\n\ndef ir_a_piso(destino):\n    global piso_actual\n    if destino < 1 or destino > MAX_PISO:\n        print(f"⚠️ Piso inválido (1-{MAX_PISO})")\n        return\n    if destino > piso_actual:\n        for p in range(piso_actual + 1, destino + 1):\n            print(f"↑ Piso {p}")\n    elif destino < piso_actual:\n        for p in range(piso_actual - 1, destino - 1, -1):\n            print(f"↓ Piso {p}")\n    piso_actual = destino\n    print(f"🏢 ¡Llegaste al piso {piso_actual}!")\n\ndef atender_solicitudes(cola):\n    for destino in cola:\n        print(f"📩 Nueva solicitud: piso {destino}")\n        ir_a_piso(destino)\n\nprint(f"📍 Inicio: piso {piso_actual}")\natender_solicitudes([4, 7, 2, 9])',
+        tests: [
+          { type: "output_contains", text: "📩 Nueva solicitud: piso 4" },
+          { type: "output_contains", text: "🏢 ¡Llegaste al piso 9!" },
+          { type: "has_for" },
+          { type: "has_def" }
+        ],
+        hints: [
+          "Usa `for destino in cola:` para recorrer cada solicitud de la lista",
+          "Dentro del for, llama `ir_a_piso(destino)` para mover el elevador a ese piso",
+          "ir_a_piso() ya calcula solo si debe subir o bajar, no necesitas repetir esa lógica",
+          "for destino in cola:\n    print(f\"📩 Nueva solicitud: piso {destino}\")\n    ir_a_piso(destino)"
+        ]
       }
     ]
   },
